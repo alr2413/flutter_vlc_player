@@ -1,6 +1,6 @@
-// ../../ios/Classes/SwiftFlutterVlcPlayerPlugin.swift
 import Cocoa
 import FlutterMacOS
+import VLCKit
 
 public class SwiftFlutterVlcPlayerPlugin: NSObject, FlutterPlugin {
   public static func register(with registrar: FlutterPluginRegistrar) {
@@ -18,3 +18,4 @@ public class SwiftFlutterVlcPlayerPlugin: NSObject, FlutterPlugin {
     }
   }
 }
+
