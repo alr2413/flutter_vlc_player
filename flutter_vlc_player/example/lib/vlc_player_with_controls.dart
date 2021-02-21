@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_vlc_player/flutter_vlc_player.dart';
 
 import 'controls_overlay.dart';
@@ -29,6 +30,9 @@ class VlcPlayerWithControlsState extends State<VlcPlayerWithControls>
   final double initSnapshotRightPosition = 10;
   final double initSnapshotBottomPosition = 10;
   OverlayEntry _overlayEntry;
+
+  bool _isFullscreen = false;
+  OverlayEntry _fullscreenOverlayEntry;
 
   //
   double sliderValue = 0.0;
@@ -230,6 +234,12 @@ class VlcPlayerWithControlsState extends State<VlcPlayerWithControls>
                 Expanded(
                   child: Container(),
                 ),
+                Text(
+                  'ViewId: ' + (_controller.viewId ?? -1).toString(),
+                  textAlign: TextAlign.center,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(color: Colors.white, fontSize: 10),
+                ),
                 Container(
                   padding: const EdgeInsets.all(8.0),
                   child: Column(
@@ -333,7 +343,14 @@ class VlcPlayerWithControlsState extends State<VlcPlayerWithControls>
                 IconButton(
                   icon: Icon(Icons.fullscreen),
                   color: Colors.white,
-                  onPressed: () {},
+                  onPressed: () async {
+                    print(_controller.viewId);
+                    if (!_isFullscreen) {
+                      _switchToFullscreen();
+                    } else {
+                      _exitFullscreen();
+                    }
+                  },
                 ),
               ],
             ),
@@ -375,6 +392,85 @@ class VlcPlayerWithControlsState extends State<VlcPlayerWithControls>
         ),
       ],
     );
+  }
+
+  void _switchToFullscreen() {
+    _isFullscreen = true;
+    _setPreferredOrientation();
+    _setSystemUIOverlays();
+
+    _fullscreenOverlayEntry = OverlayEntry(
+      builder: (_) {
+        return Scaffold(
+          body: Container(
+            color: Colors.black,
+            child: Stack(
+              alignment: Alignment.bottomCenter,
+              children: <Widget>[
+                Center(
+                  child: VlcPlayer(
+                    controller: _controller,
+                    aspectRatio: 16 / 9,
+                    placeholder: Center(child: CircularProgressIndicator()),
+                  ),
+                ),
+                TextButton(
+                  onPressed: () async {
+                    print(_controller.viewId);
+                    _exitFullscreen();
+                  },
+                  child: Icon(Icons.fullscreen_exit),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+    Overlay.of(context).insert(_fullscreenOverlayEntry);
+
+    // Navigator.of(context).push(
+    //   new MaterialPageRoute<Null>(
+    //       builder: (BuildContext context) {
+    //         return Scaffold(
+    //           body: ...
+    //         );
+    //       },
+    //       fullscreenDialog: true),
+    // );
+  }
+
+  void _exitFullscreen() {
+    _isFullscreen = false;
+
+    if (_fullscreenOverlayEntry.mounted) {
+      _fullscreenOverlayEntry?.remove();
+    }
+    _fullscreenOverlayEntry = null;
+    _setPreferredOrientation();
+    _setSystemUIOverlays();
+  }
+
+  void _setPreferredOrientation() {
+    if (_isFullscreen) {
+      SystemChrome.setPreferredOrientations(const [
+        DeviceOrientation.landscapeLeft,
+        DeviceOrientation.landscapeRight
+      ]);
+    } else {
+      SystemChrome.setPreferredOrientations(const [
+        DeviceOrientation.portraitUp,
+        DeviceOrientation.portraitDown,
+      ]);
+    }
+  }
+
+  void _setSystemUIOverlays() {
+    if (_isFullscreen) {
+      SystemChrome.setEnabledSystemUIOverlays([]);
+    } else {
+      SystemChrome.setEnabledSystemUIOverlays(SystemUiOverlay.values);
+    }
   }
 
   void _onSliderPositionChanged(double progress) {
