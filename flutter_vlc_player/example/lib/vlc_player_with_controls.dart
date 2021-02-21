@@ -416,7 +416,6 @@ class VlcPlayerWithControlsState extends State<VlcPlayerWithControls>
                 ),
                 TextButton(
                   onPressed: () async {
-                    print(_controller.viewId);
                     _exitFullscreen();
                   },
                   child: Icon(Icons.fullscreen_exit),
@@ -443,9 +442,9 @@ class VlcPlayerWithControlsState extends State<VlcPlayerWithControls>
   void _exitFullscreen() {
     _isFullscreen = false;
 
-    if (_fullscreenOverlayEntry.mounted) {
-      _fullscreenOverlayEntry?.remove();
-    }
+    // if (_fullscreenOverlayEntry.mounted) {
+    _fullscreenOverlayEntry?.remove();
+    // }
     _fullscreenOverlayEntry = null;
     _setPreferredOrientation();
     _setSystemUIOverlays();

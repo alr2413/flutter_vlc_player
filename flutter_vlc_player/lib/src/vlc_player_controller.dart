@@ -136,9 +136,9 @@ class VlcPlayerController extends ValueNotifier<VlcPlayerValue> {
       throw Exception(
           'initialize was called on a disposed VlcPlayerController');
     }
-    if (value.isInitialized) {
-      throw Exception('Already Initialized');
-    }
+    // if (value.isInitialized) {
+    //   throw Exception('Already Initialized');
+    // }
 
     _lifeCycleObserver = VlcAppLifeCycleObserver(this);
     _lifeCycleObserver.initialize();
@@ -852,7 +852,9 @@ class VlcPlayerController extends ValueNotifier<VlcPlayerValue> {
     _viewId = viewId;
     // do we need to initialize controller after view becomes ready?
     if (autoInitialize) {
+      // the following line is because of auto play feature to work correctly
       await Future.delayed(Duration(seconds: 1));
+      // initialize controller
       await initialize();
     }
     _isReadyToInitialize = true;
