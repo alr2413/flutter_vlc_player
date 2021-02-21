@@ -416,14 +416,45 @@ class VlcPlayerWithControlsState extends State<VlcPlayerWithControls>
                   child: VlcPlayer(
                     controller: _controller,
                     aspectRatio: fullscreenAspectRatio,
-                    placeholder: Center(child: CircularProgressIndicator()),
+                    placeholder: Center(
+                      child: CircularProgressIndicator(),
+                    ),
                   ),
                 ),
-                TextButton(
-                  onPressed: () async {
-                    _exitFullscreen();
-                  },
-                  child: Icon(Icons.fullscreen_exit),
+                Container(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      TextButton(
+                        child: Text(
+                          'Play / Pause',
+                          style: TextStyle(
+                            fontSize: 18,
+                            color: Colors.white,
+                          ),
+                        ),
+                        onPressed: () async {
+                          return _controller.value.isPlaying
+                              ? await _controller.pause()
+                              : await _controller.play();
+                        },
+                      ),
+                      Expanded(
+                        child: Container(),
+                      ),
+                      TextButton(
+                        onPressed: () async {
+                          _exitFullscreen();
+                        },
+                        child: Icon(
+                          Icons.fullscreen_exit,
+                          color: Colors.white,
+                          size: 40,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
