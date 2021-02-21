@@ -401,6 +401,11 @@ class VlcPlayerWithControlsState extends State<VlcPlayerWithControls>
 
     _fullscreenOverlayEntry = OverlayEntry(
       builder: (_) {
+        final width = MediaQuery.of(context).size.width;
+        final height = MediaQuery.of(context).size.height;
+        final fullscreenAspectRatio =
+            width > height ? width / height : height / width;
+        //
         return Scaffold(
           body: Container(
             color: Colors.black,
@@ -410,7 +415,7 @@ class VlcPlayerWithControlsState extends State<VlcPlayerWithControls>
                 Center(
                   child: VlcPlayer(
                     controller: _controller,
-                    aspectRatio: 16 / 9,
+                    aspectRatio: fullscreenAspectRatio,
                     placeholder: Center(child: CircularProgressIndicator()),
                   ),
                 ),
