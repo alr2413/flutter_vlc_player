@@ -114,6 +114,10 @@ class VlcPlayerController extends ValueNotifier<VlcPlayerValue> {
   @visibleForTesting
   int get viewId => _viewId;
 
+  void setViewID(int id) {
+    _viewId = id;
+  }
+
   /// The viewId for this controller
   int _viewId;
 

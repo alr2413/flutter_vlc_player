@@ -46,6 +46,7 @@ class VlcPlayerWithControlsState extends State<VlcPlayerWithControls>
   //
   List<double> playbackSpeeds = [0.5, 1.0, 2.0];
   int playbackSpeedIndex = 1;
+  int portraitViewID;
 
   @override
   bool get wantKeepAlive => true;
@@ -394,10 +395,15 @@ class VlcPlayerWithControlsState extends State<VlcPlayerWithControls>
     );
   }
 
-  void _switchToFullscreen() {
+  void _switchToFullscreen() async {
     _isFullscreen = true;
-    _setPreferredOrientation();
-    _setSystemUIOverlays();
+    // _setPreferredOrientation();
+    // _setSystemUIOverlays();
+
+    portraitViewID = _controller.viewId;
+    await _controller.pause();
+    await Future.delayed(Duration(seconds: 1));
+    _controller.removeListener(listener);
 
     _fullscreenOverlayEntry = OverlayEntry(
       builder: (_) {
@@ -406,8 +412,11 @@ class VlcPlayerWithControlsState extends State<VlcPlayerWithControls>
         final fullscreenAspectRatio =
             width > height ? width / height : height / width;
         //
-        return Scaffold(
-          body: Container(
+        return Positioned(
+          right: 10,
+          bottom: 10,
+          width: 300,
+          child: Container(
             color: Colors.black,
             child: Stack(
               alignment: Alignment.bottomCenter,
@@ -426,23 +435,23 @@ class VlcPlayerWithControlsState extends State<VlcPlayerWithControls>
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      TextButton(
-                        child: Text(
-                          'Play / Pause',
-                          style: TextStyle(
-                            fontSize: 18,
-                            color: Colors.white,
-                          ),
-                        ),
-                        onPressed: () async {
-                          return _controller.value.isPlaying
-                              ? await _controller.pause()
-                              : await _controller.play();
-                        },
-                      ),
-                      Expanded(
-                        child: Container(),
-                      ),
+                      // TextButton(
+                      //   child: Text(
+                      //     'Play / Pause',
+                      //     style: TextStyle(
+                      //       fontSize: 18,
+                      //       color: Colors.white,
+                      //     ),
+                      //   ),
+                      //   onPressed: () async {
+                      //     return _controller.value.isPlaying
+                      //         ? await _controller.pause()
+                      //         : await _controller.play();
+                      //   },
+                      // ),
+                      // Expanded(
+                      //   child: Container(),
+                      // ),
                       TextButton(
                         onPressed: () async {
                           _exitFullscreen();
@@ -450,7 +459,7 @@ class VlcPlayerWithControlsState extends State<VlcPlayerWithControls>
                         child: Icon(
                           Icons.fullscreen_exit,
                           color: Colors.white,
-                          size: 40,
+                          size: 10,
                         ),
                       ),
                     ],
@@ -484,6 +493,9 @@ class VlcPlayerWithControlsState extends State<VlcPlayerWithControls>
     _fullscreenOverlayEntry = null;
     _setPreferredOrientation();
     _setSystemUIOverlays();
+    //
+    _controller.setViewID(portraitViewID);
+    _controller.addListener(listener);
   }
 
   void _setPreferredOrientation() {
