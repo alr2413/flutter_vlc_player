@@ -47,6 +47,7 @@ class VlcPlayerWithControlsState extends State<VlcPlayerWithControls>
   List<double> playbackSpeeds = [0.5, 1.0, 2.0];
   int playbackSpeedIndex = 1;
   int portraitViewID;
+  Duration seekPosition;
 
   @override
   bool get wantKeepAlive => true;
@@ -401,6 +402,7 @@ class VlcPlayerWithControlsState extends State<VlcPlayerWithControls>
     // _setSystemUIOverlays();
 
     portraitViewID = _controller.viewId;
+    seekPosition = await _controller.getPosition();
     await _controller.pause();
     await Future.delayed(Duration(seconds: 1));
     _controller.removeListener(listener);
@@ -495,6 +497,7 @@ class VlcPlayerWithControlsState extends State<VlcPlayerWithControls>
     _setSystemUIOverlays();
     //
     _controller.setViewID(portraitViewID);
+    _controller.seekTo(seekPosition);
     _controller.addListener(listener);
   }
 
