@@ -3,60 +3,47 @@ import MobileVLCKit
 import UIKit
 
 public class SwiftFlutterVlcPlayerPlugin: NSObject, FlutterPlugin {
-    
+        
     public static func register(with registrar: FlutterPluginRegistrar) {
-
-        let factory = VLCViewFactory(registrar: registrar)
-        registrar.register(factory, withId: "flutter_video_plugin/getVideoView")
+        let instance = VLCViewBuilder(registrar: registrar)
+        registrar.publish(instance)
     }
     
+    public func detachFromEngine(for registrar: FlutterPluginRegistrar) {
+        // clean
+    }
 }
 
-public class VLCViewFactory: NSObject, FlutterPlatformViewFactory {
-        
-    private var registrar: FlutterPluginRegistrar
-    private var builder: VLCViewBuilder
+class FLTFrameUpdater: NSObject {
+    var textureId: Int64 = 0
+    private(set) weak var registry: (NSObjectProtocol & FlutterTextureRegistry)?
 
-    
-    init(registrar: FlutterPluginRegistrar) {
-        self.registrar = registrar
-        self.builder = VLCViewBuilder(registrar: registrar)
-        super.init()
+    @objc func on(_ link: CADisplayLink?) {
+        registry?.textureFrameAvailable(textureId)
     }
-    
-    public func create(withFrame frame: CGRect, viewIdentifier viewId: Int64, arguments args: Any?) -> FlutterPlatformView {
-        
-        //        let arguments = args as? NSDictionary ?? [:]
-        return builder.build(frame: frame, viewId: viewId)
+
+    convenience init?(registry: (NSObjectProtocol & FlutterTextureRegistry)?) {
+        assert(self != nil, "super init cannot be nil")
+        self.registry = registry
     }
-    
-    public func createArgsCodec() -> FlutterMessageCodec & NSObjectProtocol {
-        return FlutterStandardMessageCodec.sharedInstance()
-    }
-    
 }
 
 public class VLCViewBuilder: NSObject, VlcPlayerApi{
-    
+        
     var players = [Int:VLCViewController]()
+    private var registry: FlutterTextureRegistry
     private var registrar: FlutterPluginRegistrar
     private var messenger: FlutterBinaryMessenger
     
     init(registrar: FlutterPluginRegistrar) {
         self.registrar = registrar
+        self.registry = registrar.textures()
         self.messenger = registrar.messenger()
         super.init()
         //
         VlcPlayerApiSetup(messenger, self)
     }
     
-    public func build(frame: CGRect, viewId: Int64) -> VLCViewController{
-        //
-        var vlcViewController: VLCViewController
-        vlcViewController = VLCViewController(frame: frame, viewId: viewId, messenger: messenger)
-        players[Int(viewId)] = vlcViewController
-        return vlcViewController;
-    }
     
     public func initialize(_ error: AutoreleasingUnsafeMutablePointer<FlutterError?>) {
         return
@@ -70,10 +57,18 @@ public class VLCViewBuilder: NSObject, VlcPlayerApi{
         return players[Int(truncating: textureId! as NSNumber)]
     }
     
-    public func create(_ input: CreateMessage, error: AutoreleasingUnsafeMutablePointer<FlutterError?>) {
+    public func create(_ input: CreateMessage, error: AutoreleasingUnsafeMutablePointer<FlutterError?>) -> TextureMessage {
+        var frameUpdater: FLTFrameUpdater?
+        frameUpdater = FLTFrameUpdater(registry: registry)
+        var player: VLCViewController?
+        player = VLCViewController()
+        let textureId = registry.register(player as! FlutterTexture) ?? 0
+        frameUpdater?.textureId = textureId
+        //
+        player?.setup(viewId: textureId, messenger: messenger)
         
-        let player = getPlayer(textureId: input.textureId)
-        
+        players[Int(textureId)] = player
+                
         var isAssetUrl: Bool = false
         var mediaUrl: String = ""
         
@@ -98,6 +93,10 @@ public class VLCViewBuilder: NSObject, VlcPlayerApi{
             hwAcc: input.hwAcc?.intValue ?? HWAccellerationType.HW_ACCELERATION_AUTOMATIC.rawValue,
             options: input.options as? [String] ?? []
         )
+        
+        let message: TextureMessage = TextureMessage()
+        message.textureId = 0
+        return message
     }
     
     public func dispose(_ input: TextureMessage, error: AutoreleasingUnsafeMutablePointer<FlutterError?>) {
@@ -470,21 +469,26 @@ public class VLCViewBuilder: NSObject, VlcPlayerApi{
 }
 
 
-public class VLCViewController: NSObject, FlutterPlatformView {
+public class VLCViewController: NSObject, FlutterTexture {
     
     var hostedView: UIView
     var vlcMediaPlayer: VLCMediaPlayer
     var mediaEventChannel: FlutterEventChannel
-    let mediaEventChannelHandler: VLCPlayerEventStreamHandler
+    var mediaEventChannelHandler: VLCPlayerEventStreamHandler
     var rendererEventChannel: FlutterEventChannel
-    let rendererEventChannelHandler: VLCRendererEventStreamHandler
+    var rendererEventChannelHandler: VLCRendererEventStreamHandler
     var rendererdiscoverers: [VLCRendererDiscoverer] = [VLCRendererDiscoverer]()
     
-    public func view() -> UIView {
-        return hostedView
+    public func copyPixelBuffer() -> Unmanaged<CVPixelBuffer>? {
+        return
     }
     
-    init(frame: CGRect, viewId: Int64, messenger:FlutterBinaryMessenger) {
+    override init() {
+        self.hostedView = UIView()
+    }
+    
+    
+    public func setup(viewId: Int64, messenger:FlutterBinaryMessenger){
         
         let mediaEventChannel = FlutterEventChannel(
             name: "flutter_video_plugin/getVideoEvents_\(viewId)",
@@ -495,7 +499,6 @@ public class VLCViewController: NSObject, FlutterPlatformView {
             binaryMessenger: messenger
         )
         
-        self.hostedView = UIView(frame: frame)
         self.vlcMediaPlayer = VLCMediaPlayer()
 //        self.vlcMediaPlayer.libraryInstance.debugLogging = true
 //        self.vlcMediaPlayer.libraryInstance.debugLoggingLevel = 3

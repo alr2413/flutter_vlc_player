@@ -29,19 +29,16 @@ class VlcPlayer extends StatefulWidget {
   _VlcPlayerState createState() => _VlcPlayerState();
 }
 
-class _VlcPlayerState extends State<VlcPlayer>
-    with AutomaticKeepAliveClientMixin {
-  @override
-  bool get wantKeepAlive => true;
+class _VlcPlayerState extends State<VlcPlayer> {
 
   _VlcPlayerState() {
     _listener = () {
       if (!mounted) return;
       //
-      final isInitialized = widget.controller.value.isInitialized;
-      if (isInitialized != _isInitialized) {
+      final newTextureId = widget.controller.textureId;
+      if (newTextureId != _textureId) {
         setState(() {
-          _isInitialized = isInitialized;
+          _textureId = newTextureId;
         });
       }
     };
@@ -49,13 +46,13 @@ class _VlcPlayerState extends State<VlcPlayer>
 
   VoidCallback _listener;
 
-  bool _isInitialized;
+  int _textureId;
 
   @override
   void initState() {
     super.initState();
-    _isInitialized = widget.controller.value.isInitialized;
-    // Need to listen for initialization events since the actual initialization value
+    _textureId = widget.controller.textureId;
+    // Need to listen for initialization events since the actual texture ID
     // becomes available after asynchronous initialization finishes.
     widget.controller.addListener(_listener);
   }
@@ -63,11 +60,9 @@ class _VlcPlayerState extends State<VlcPlayer>
   @override
   void didUpdateWidget(VlcPlayer oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.controller != widget.controller) {
-      oldWidget.controller.removeListener(_listener);
-      _isInitialized = widget.controller.value.isInitialized;
-      widget.controller.addListener(_listener);
-    }
+    oldWidget.controller.removeListener(_listener);
+    _textureId = widget.controller.textureId;
+    widget.controller.addListener(_listener);
   }
 
   @override
@@ -78,22 +73,8 @@ class _VlcPlayerState extends State<VlcPlayer>
 
   @override
   Widget build(BuildContext context) {
-    super.build(context);
-    return AspectRatio(
-      aspectRatio: widget.aspectRatio,
-      child: Stack(
-        children: <Widget>[
-          Offstage(
-            offstage: _isInitialized,
-            child: widget.placeholder ?? Container(),
-          ),
-          Offstage(
-            offstage: !_isInitialized,
-            child: vlcPlayerPlatform
-                .buildView(widget.controller.onPlatformViewCreated),
-          ),
-        ],
-      ),
-    );
+    return _textureId == VlcPlayerController.kUninitializedTextureId
+        ? Container()
+        : vlcPlayerPlatform.buildView(_textureId);
   }
 }

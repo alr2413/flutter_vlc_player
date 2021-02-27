@@ -38,6 +38,7 @@ class _MultipleTabState extends State<MultipleTab> {
           ]),
         ),
       );
+      controller.initialize();
       controllers.add(controller);
     }
   }

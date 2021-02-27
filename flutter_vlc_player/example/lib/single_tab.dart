@@ -123,6 +123,7 @@ class _SingleTabState extends State<SingleTab> {
         );
         break;
     }
+    _controller.initialize();
   }
 
   @override

@@ -33,7 +33,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-final class FlutterVlcPlayer implements PlatformView {
+final class FlutterVlcPlayer {
 
     private final String TAG = this.getClass().getSimpleName();
     private final boolean debug = false;
@@ -54,13 +54,11 @@ final class FlutterVlcPlayer implements PlatformView {
     private List<RendererItem> rendererItems;
     private boolean isDisposed = false;
 
-    // Platform view
-    @Override
+    // View
     public View getView() {
         return textureView;
     }
 
-    @Override
     public void dispose() {
         if (isDisposed)
             return;
@@ -82,7 +80,7 @@ final class FlutterVlcPlayer implements PlatformView {
     }
 
     // VLC Player
-    FlutterVlcPlayer(int viewId, Context context, BinaryMessenger binaryMessenger, TextureRegistry textureRegistry) {
+    FlutterVlcPlayer(long viewId, Context context, BinaryMessenger binaryMessenger, TextureRegistry textureRegistry) {
         this.context = context;
         // event for media
         mediaEventChannel = new EventChannel(binaryMessenger, "flutter_video_plugin/getVideoEvents_" + viewId);
@@ -204,7 +202,7 @@ final class FlutterVlcPlayer implements PlatformView {
             }
         });
         //
-        mediaPlayer.getVLCVout().setWindowSize(textureView.getWidth(), textureView.getHeight());
+//        mediaPlayer.getVLCVout().setWindowSize(textureView.getWidth(), textureView.getHeight());
         mediaPlayer.getVLCVout().setVideoSurface(textureView.getSurfaceTexture());
         mediaPlayer.getVLCVout().attachViews();
         mediaPlayer.setVideoTrackEnabled(true);
@@ -222,6 +220,7 @@ final class FlutterVlcPlayer implements PlatformView {
                         if (currentVideoTrack != null) {
                             height = currentVideoTrack.height;
                             width = currentVideoTrack.width;
+                            textureEntry.surfaceTexture().setDefaultBufferSize(width, height);
                         }
                         //
                         switch (event.type) {

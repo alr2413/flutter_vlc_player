@@ -5,7 +5,6 @@ class TextureMessage {
 }
 
 class CreateMessage {
-  int textureId;
   String uri;
   int type;
   String packageName;
@@ -145,7 +144,7 @@ class RenderDeviceMessage {
 @HostApi(dartHostTestHandler: 'TestHostVlcPlayerApi')
 abstract class VlcPlayerApi {
   void initialize();
-  void create(CreateMessage msg);
+  TextureMessage create(CreateMessage msg);
   void dispose(TextureMessage msg);
   // general
   void setStreamUrl(SetMediaMessage msg);
