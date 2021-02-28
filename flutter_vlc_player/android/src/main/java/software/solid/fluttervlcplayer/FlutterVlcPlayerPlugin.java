@@ -17,7 +17,7 @@ public class FlutterVlcPlayerPlugin implements FlutterPlugin {
 
     @SuppressWarnings("deprecation")
     private FlutterVlcPlayerPlugin(io.flutter.plugin.common.PluginRegistry.Registrar registrar) {
-        this.flutterVlcPlayerBuilder =
+        flutterVlcPlayerBuilder =
                 new FlutterVlcPlayerBuilder(
                         registrar.context(),
                         registrar.messenger(),
@@ -39,7 +39,7 @@ public class FlutterVlcPlayerPlugin implements FlutterPlugin {
     @Override
     public void onAttachedToEngine(@NonNull FlutterPluginBinding binding) {
         final FlutterInjector injector = FlutterInjector.instance();
-        this.flutterVlcPlayerBuilder =
+        flutterVlcPlayerBuilder =
                 new FlutterVlcPlayerBuilder(
                         binding.getApplicationContext(),
                         binding.getBinaryMessenger(),

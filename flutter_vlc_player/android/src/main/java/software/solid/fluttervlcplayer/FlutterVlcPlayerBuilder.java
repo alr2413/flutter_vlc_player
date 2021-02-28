@@ -75,10 +75,9 @@ public class FlutterVlcPlayerBuilder implements Messages.VlcPlayerApi {
 
         TextureRegistry.SurfaceTextureEntry handle = textureRegistry.createSurfaceTexture();
         FlutterVlcPlayer player = new FlutterVlcPlayer(
-                handle.id(),
                 applicationContext,
                 binaryMessenger,
-                textureRegistry
+                handle
         );
         vlcPlayers.put(handle.id(), player);
         //

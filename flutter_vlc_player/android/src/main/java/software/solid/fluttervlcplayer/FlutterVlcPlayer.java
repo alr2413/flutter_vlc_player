@@ -80,10 +80,11 @@ final class FlutterVlcPlayer {
     }
 
     // VLC Player
-    FlutterVlcPlayer(long viewId, Context context, BinaryMessenger binaryMessenger, TextureRegistry textureRegistry) {
+    FlutterVlcPlayer(Context context, BinaryMessenger binaryMessenger, TextureRegistry.SurfaceTextureEntry textureEntry) {
         this.context = context;
+        this.textureEntry = textureEntry;
         // event for media
-        mediaEventChannel = new EventChannel(binaryMessenger, "flutter_video_plugin/getVideoEvents_" + viewId);
+        mediaEventChannel = new EventChannel(binaryMessenger, "flutter_video_plugin/getVideoEvents_" + textureEntry.id());
         mediaEventChannel.setStreamHandler(
                 new EventChannel.StreamHandler() {
                     @Override
@@ -97,7 +98,7 @@ final class FlutterVlcPlayer {
                     }
                 });
         // event for renderer
-        rendererEventChannel = new EventChannel(binaryMessenger, "flutter_video_plugin/getRendererEvents_" + viewId);
+        rendererEventChannel = new EventChannel(binaryMessenger, "flutter_video_plugin/getRendererEvents_" + textureEntry.id());
         rendererEventChannel.setStreamHandler(
                 new EventChannel.StreamHandler() {
                     @Override
@@ -111,7 +112,6 @@ final class FlutterVlcPlayer {
                     }
                 });
         //
-        textureEntry = textureRegistry.createSurfaceTexture();
         textureView = new TextureView(context);
         textureView.setSurfaceTexture(textureEntry.surfaceTexture());
         textureView.forceLayout();
@@ -130,77 +130,77 @@ final class FlutterVlcPlayer {
 
     private void setupVlcMediaPlayer() {
 
-        // method 1
-        textureView.setSurfaceTextureListener(new TextureView.SurfaceTextureListener() {
-
-            boolean wasPlaying = false;
-
-            @Override
-            public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
-                log("onSurfaceTextureAvailable");
-
-                new Handler(Looper.getMainLooper()).postDelayed(() -> {
-                    if (mediaPlayer == null)
-                        return;
-                    mediaPlayer.getVLCVout().setWindowSize(width, height);
-                    mediaPlayer.getVLCVout().setVideoSurface(surface);
-                    if (!mediaPlayer.getVLCVout().areViewsAttached())
-                        mediaPlayer.getVLCVout().attachViews();
-                    mediaPlayer.setVideoTrackEnabled(true);
-                    if (wasPlaying)
-                        mediaPlayer.play();
-                    wasPlaying = false;
-                }, 100L);
-
-            }
-
-            @Override
-            public void onSurfaceTextureSizeChanged(SurfaceTexture surface, int width, int height) {
-                if (mediaPlayer != null)
-                    mediaPlayer.getVLCVout().setWindowSize(width, height);
-            }
-
-            @Override
-            public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
-                log("onSurfaceTextureDestroyed");
-
-                if (mediaPlayer != null) {
-                    wasPlaying = mediaPlayer.isPlaying();
-                    mediaPlayer.pause();
-                    mediaPlayer.setVideoTrackEnabled(false);
-                    mediaPlayer.getVLCVout().detachViews();
-                }
-                return false; //do not return true if you reuse it.
-            }
-
-            @Override
-            public void onSurfaceTextureUpdated(SurfaceTexture surface) {
-            }
-
-        });
-
-//         method 2
-        textureView.addOnLayoutChangeListener(new View.OnLayoutChangeListener() {
-            @Override
-            public void onLayoutChange(View view, int left, int top, int right, int bottom, int oldLeft, int oldTop, int oldRight, int oldBottom) {
-                log("onLayoutChange");
-                //
-                if (left != oldLeft || top != oldTop || right != oldRight || bottom != oldBottom) {
-                    mediaPlayer.pause();
-                    mediaPlayer.setVideoTrackEnabled(false);
-                    mediaPlayer.getVLCVout().detachViews();
-                    mediaPlayer.getVLCVout().setWindowSize(view.getWidth(), view.getHeight());
-                    mediaPlayer.getVLCVout().setVideoView((TextureView) view);
-                    mediaPlayer.getVLCVout().attachViews();
-                    mediaPlayer.setVideoTrackEnabled(true);
-                    // hacky way to prevent video pixeling, it might be larger than buffer size
-                    long tmpTime = mediaPlayer.getTime() - 500;
-                    if (tmpTime > 0)
-                        mediaPlayer.setTime(tmpTime);
-                    mediaPlayer.play();
-                }
-            }
-        });
+//        // method 1
+//        textureView.setSurfaceTextureListener(new TextureView.SurfaceTextureListener() {
+//
+//            boolean wasPlaying = false;
+//
+//            @Override
+//            public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
+//                log("onSurfaceTextureAvailable");
+//
+//                new Handler(Looper.getMainLooper()).postDelayed(() -> {
+//                    if (mediaPlayer == null)
+//                        return;
+//                    mediaPlayer.getVLCVout().setWindowSize(width, height);
+//                    mediaPlayer.getVLCVout().setVideoSurface(surface);
+//                    if (!mediaPlayer.getVLCVout().areViewsAttached())
+//                        mediaPlayer.getVLCVout().attachViews();
+//                    mediaPlayer.setVideoTrackEnabled(true);
+//                    if (wasPlaying)
+//                        mediaPlayer.play();
+//                    wasPlaying = false;
+//                }, 100L);
+//
+//            }
+//
+//            @Override
+//            public void onSurfaceTextureSizeChanged(SurfaceTexture surface, int width, int height) {
+//                if (mediaPlayer != null)
+//                    mediaPlayer.getVLCVout().setWindowSize(width, height);
+//            }
+//
+//            @Override
+//            public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
+//                log("onSurfaceTextureDestroyed");
+//
+//                if (mediaPlayer != null) {
+//                    wasPlaying = mediaPlayer.isPlaying();
+//                    mediaPlayer.pause();
+//                    mediaPlayer.setVideoTrackEnabled(false);
+//                    mediaPlayer.getVLCVout().detachViews();
+//                }
+//                return false; //do not return true if you reuse it.
+//            }
+//
+//            @Override
+//            public void onSurfaceTextureUpdated(SurfaceTexture surface) {
+//            }
+//
+//        });
+//
+////         method 2
+//        textureView.addOnLayoutChangeListener(new View.OnLayoutChangeListener() {
+//            @Override
+//            public void onLayoutChange(View view, int left, int top, int right, int bottom, int oldLeft, int oldTop, int oldRight, int oldBottom) {
+//                log("onLayoutChange");
+//                //
+//                if (left != oldLeft || top != oldTop || right != oldRight || bottom != oldBottom) {
+//                    mediaPlayer.pause();
+//                    mediaPlayer.setVideoTrackEnabled(false);
+//                    mediaPlayer.getVLCVout().detachViews();
+//                    mediaPlayer.getVLCVout().setWindowSize(view.getWidth(), view.getHeight());
+//                    mediaPlayer.getVLCVout().setVideoView((TextureView) view);
+//                    mediaPlayer.getVLCVout().attachViews();
+//                    mediaPlayer.setVideoTrackEnabled(true);
+//                    // hacky way to prevent video pixeling, it might be larger than buffer size
+//                    long tmpTime = mediaPlayer.getTime() - 500;
+//                    if (tmpTime > 0)
+//                        mediaPlayer.setTime(tmpTime);
+//                    mediaPlayer.play();
+//                }
+//            }
+//        });
         //
 //        mediaPlayer.getVLCVout().setWindowSize(textureView.getWidth(), textureView.getHeight());
         mediaPlayer.getVLCVout().setVideoSurface(textureView.getSurfaceTexture());
@@ -209,6 +209,9 @@ final class FlutterVlcPlayer {
         //
         mediaPlayer.setEventListener(
                 new MediaPlayer.EventListener() {
+                    int mHeight = 0;
+                    int mWidth = 0;
+
                     @Override
                     public void onEvent(MediaPlayer.Event event) {
                         HashMap<String, Object> eventObject = new HashMap<>();
@@ -220,7 +223,11 @@ final class FlutterVlcPlayer {
                         if (currentVideoTrack != null) {
                             height = currentVideoTrack.height;
                             width = currentVideoTrack.width;
-                            textureEntry.surfaceTexture().setDefaultBufferSize(width, height);
+                            if (mHeight != height || mWidth != width) {
+                                mWidth = width;
+                                mHeight = height;
+                                textureEntry.surfaceTexture().setDefaultBufferSize(width, height);
+                            }
                         }
                         //
                         switch (event.type) {
