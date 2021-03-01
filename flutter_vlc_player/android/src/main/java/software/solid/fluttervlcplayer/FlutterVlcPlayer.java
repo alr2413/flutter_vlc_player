@@ -9,6 +9,7 @@ import org.videolan.libvlc.interfaces.IMedia;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.graphics.SurfaceTexture;
 import android.net.Uri;
 import android.os.Handler;
@@ -20,6 +21,18 @@ import android.view.SurfaceView;
 import android.view.TextureView;
 import android.view.View;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
+import com.google.android.exoplayer2.C;
+import com.google.android.exoplayer2.MediaItem;
+import com.google.android.exoplayer2.PlayerMessage;
+import com.google.android.exoplayer2.Renderer;
+import com.google.android.exoplayer2.SimpleExoPlayer;
+import com.google.android.exoplayer2.source.MediaSource;
+
+import io.flutter.embedding.android.FlutterActivity;
+import io.flutter.embedding.android.FlutterView;
 import io.flutter.plugin.common.BinaryMessenger;
 import io.flutter.plugin.common.EventChannel;
 import io.flutter.plugin.platform.PlatformView;
@@ -35,11 +48,15 @@ import java.util.List;
 
 final class FlutterVlcPlayer {
 
+    private SimpleExoPlayer exoPlayer;
+    private Surface surface;
+
+
     private final String TAG = this.getClass().getSimpleName();
     private final boolean debug = false;
     //
     private final Context context;
-    private final TextureView textureView;
+    private TextureView textureView;
     private final TextureRegistry.SurfaceTextureEntry textureEntry;
     //
     private final QueuingEventSink mediaEventSink = new QueuingEventSink();
@@ -112,10 +129,10 @@ final class FlutterVlcPlayer {
                     }
                 });
         //
-        textureView = new TextureView(context);
-        textureView.setSurfaceTexture(textureEntry.surfaceTexture());
-        textureView.forceLayout();
-        textureView.setFitsSystemWindows(true);
+//        textureView = new TextureView(context);
+//        textureView.setSurfaceTexture(textureEntry.surfaceTexture());
+//        textureView.forceLayout();
+//        textureView.setFitsSystemWindows(true);
     }
 
     // private Uri getStreamUri(String streamPath, boolean isLocal) {
@@ -126,58 +143,72 @@ final class FlutterVlcPlayer {
         libVLC = new LibVLC(context, options);
         mediaPlayer = new MediaPlayer(libVLC);
         setupVlcMediaPlayer();
+        //
+//        exoPlayer = new SimpleExoPlayer.Builder(context).build();
+//        exoPlayer.setMediaItem(MediaItem.fromUri("https://media.w3.org/2010/05/sintel/trailer.mp4"));
+        exoPlayer.prepare();
+////        surface = new Surface(textureEntry.surfaceTexture());
+////        exoPlayer.setVideoSurface(surface);
+//        exoPlayer.setVideoTextureView(textureView);
+//        exoPlayer.play();
     }
 
     private void setupVlcMediaPlayer() {
 
-//        // method 1
-//        textureView.setSurfaceTextureListener(new TextureView.SurfaceTextureListener() {
-//
-//            boolean wasPlaying = false;
-//
-//            @Override
-//            public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
-//                log("onSurfaceTextureAvailable");
-//
-//                new Handler(Looper.getMainLooper()).postDelayed(() -> {
-//                    if (mediaPlayer == null)
-//                        return;
-//                    mediaPlayer.getVLCVout().setWindowSize(width, height);
-//                    mediaPlayer.getVLCVout().setVideoSurface(surface);
-//                    if (!mediaPlayer.getVLCVout().areViewsAttached())
-//                        mediaPlayer.getVLCVout().attachViews();
-//                    mediaPlayer.setVideoTrackEnabled(true);
-//                    if (wasPlaying)
-//                        mediaPlayer.play();
-//                    wasPlaying = false;
-//                }, 100L);
-//
-//            }
-//
-//            @Override
-//            public void onSurfaceTextureSizeChanged(SurfaceTexture surface, int width, int height) {
-//                if (mediaPlayer != null)
-//                    mediaPlayer.getVLCVout().setWindowSize(width, height);
-//            }
-//
-//            @Override
-//            public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
-//                log("onSurfaceTextureDestroyed");
-//
-//                if (mediaPlayer != null) {
-//                    wasPlaying = mediaPlayer.isPlaying();
-//                    mediaPlayer.pause();
-//                    mediaPlayer.setVideoTrackEnabled(false);
-//                    mediaPlayer.getVLCVout().detachViews();
-//                }
-//                return false; //do not return true if you reuse it.
-//            }
-//
-//            @Override
-//            public void onSurfaceTextureUpdated(SurfaceTexture surface) {
-//            }
-//
-//        });
+        // method 1
+        textureEntry.surfaceTexture().setDefaultBufferSize(1000,1000);
+        textureView = new TextureView(context);
+        textureView.setSurfaceTexture(textureEntry.surfaceTexture());
+        textureView.forceLayout();
+        textureView.setFitsSystemWindows(true);
+        //
+        textureView.setSurfaceTextureListener(new TextureView.SurfaceTextureListener() {
+
+            boolean wasPlaying = false;
+
+            @Override
+            public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
+                log("onSurfaceTextureAvailable");
+
+                new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                    if (mediaPlayer == null)
+                        return;
+                    mediaPlayer.getVLCVout().setWindowSize(width, height);
+                    mediaPlayer.getVLCVout().setVideoSurface(surface);
+                    if (!mediaPlayer.getVLCVout().areViewsAttached())
+                        mediaPlayer.getVLCVout().attachViews();
+                    mediaPlayer.setVideoTrackEnabled(true);
+                    if (wasPlaying)
+                        mediaPlayer.play();
+                    wasPlaying = false;
+                }, 100L);
+
+            }
+
+            @Override
+            public void onSurfaceTextureSizeChanged(SurfaceTexture surface, int width, int height) {
+                if (mediaPlayer != null)
+                    mediaPlayer.getVLCVout().setWindowSize(width, height);
+            }
+
+            @Override
+            public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
+                log("onSurfaceTextureDestroyed");
+
+                if (mediaPlayer != null) {
+                    wasPlaying = mediaPlayer.isPlaying();
+                    mediaPlayer.pause();
+                    mediaPlayer.setVideoTrackEnabled(false);
+                    mediaPlayer.getVLCVout().detachViews();
+                }
+                return false; //do not return true if you reuse it.
+            }
+
+            @Override
+            public void onSurfaceTextureUpdated(SurfaceTexture surface) {
+            }
+
+        });
 //
 ////         method 2
 //        textureView.addOnLayoutChangeListener(new View.OnLayoutChangeListener() {
@@ -201,9 +232,10 @@ final class FlutterVlcPlayer {
 //                }
 //            }
 //        });
-        //
 //        mediaPlayer.getVLCVout().setWindowSize(textureView.getWidth(), textureView.getHeight());
         mediaPlayer.getVLCVout().setVideoSurface(textureView.getSurfaceTexture());
+//        surface = new Surface(textureEntry.surfaceTexture());
+//        mediaPlayer.getVLCVout().setVideoSurface(surface, null);
         mediaPlayer.getVLCVout().attachViews();
         mediaPlayer.setVideoTrackEnabled(true);
         //
@@ -226,7 +258,7 @@ final class FlutterVlcPlayer {
                             if (mHeight != height || mWidth != width) {
                                 mWidth = width;
                                 mHeight = height;
-                                textureEntry.surfaceTexture().setDefaultBufferSize(width, height);
+//                                textureEntry.surfaceTexture().setDefaultBufferSize(width, height);
                             }
                         }
                         //
@@ -353,6 +385,7 @@ final class FlutterVlcPlayer {
                 media.addOption(":no-mediacodec-dr");
                 media.addOption(":no-omxil-dr");
             }
+            media.addOption(":codec=all");
             mediaPlayer.setMedia(media);
             media.release();
             //

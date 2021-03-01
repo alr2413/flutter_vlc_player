@@ -85,6 +85,7 @@ public class FlutterVlcPlayerBuilder implements Messages.VlcPlayerApi {
         if (arg.getOptions().size() > 0)
             for (Object option : arg.getOptions())
                 options.add((String) option);
+        options.add("--avcodec-hw=none");
         player.initialize(options);
         //
         String mediaUrl;

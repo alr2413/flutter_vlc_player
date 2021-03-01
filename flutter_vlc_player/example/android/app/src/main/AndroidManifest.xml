@@ -18,6 +18,7 @@
         android:label="Flutter Vlc Player"
         android:icon="@mipmap/ic_launcher"
         android:requestLegacyExternalStorage="true"
+        android:hardwareAccelerated="true"
         android:usesCleartextTraffic="true">
         <activity
             android:name=".MainActivity"

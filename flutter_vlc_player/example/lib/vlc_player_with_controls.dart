@@ -274,10 +274,13 @@ class VlcPlayerWithControlsState extends State<VlcPlayerWithControls>
               alignment: Alignment.bottomCenter,
               children: <Widget>[
                 Center(
-                  child: VlcPlayer(
-                    controller: _controller,
+                  child: AspectRatio(
                     aspectRatio: 16 / 9,
-                    placeholder: Center(child: CircularProgressIndicator()),
+                    child: VlcPlayer(
+                      controller: _controller,
+                      aspectRatio: 16 / 9,
+                      placeholder: Center(child: CircularProgressIndicator()),
+                    ),
                   ),
                 ),
                 ControlsOverlay(controller: _controller),

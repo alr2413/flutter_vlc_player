@@ -81,7 +81,7 @@ class _SingleTabState extends State<SingleTab> {
       case VideoType.network:
         _controller = VlcPlayerController.network(
           initVideo.path,
-          hwAcc: HwAcc.FULL,
+          hwAcc: HwAcc.DISABLED,
           onInit: () async {
             await _controller.startRendererScanning();
           },
@@ -131,7 +131,7 @@ class _SingleTabState extends State<SingleTab> {
     return ListView(
       children: [
         Container(
-          height: 400,
+          height: 600,
           child: VlcPlayerWithControls(key: _key, controller: _controller),
         ),
         ListView.builder(
