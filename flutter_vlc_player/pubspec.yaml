@@ -22,8 +22,13 @@ dependencies:
   cryptoutils: ^0.4.0
   meta: ^1.2.4
   pedantic: ^1.9.0
-  flutter_vlc_player_platform_interface: 
-    path: ../flutter_vlc_player_platform_interface
+#   flutter_vlc_player_platform_interface: 
+#     path: ../flutter_vlc_player_platform_interface
+  flutter_vlc_player_platform_interface:
+    git:
+      url: https://github.com/alr2413/flutter_vlc_player.git
+      path: flutter_vlc_player_platform_interface
+      ref: texture
 
 dev_dependencies:
   flutter_test:
