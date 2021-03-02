@@ -35,34 +35,38 @@ public class VLCViewBuilder: NSObject, VlcPlayerApi{
         return players[Int(truncating: textureId! as NSNumber)]
     }
     
-    public func create(_ input: CreateMessage, error: AutoreleasingUnsafeMutablePointer<FlutterError?>) {
+    public func create(_ input: CreateMessage, error: AutoreleasingUnsafeMutablePointer<FlutterError?>) -> TextureMessage? {
         
-        let player = getPlayer(textureId: input.textureId)
+//        let player = getPlayer(textureId: input.textureId)
+//        
+//        var isAssetUrl: Bool = false
+//        var mediaUrl: String = ""
+//
+//        if(DataSourceType(rawValue: Int(truncating: input.type!)) == DataSourceType.ASSET){
+//            var assetPath: String
+//            if input.packageName != nil {
+//                assetPath = registrar.lookupKey(forAsset: input.uri ?? "" , fromPackage: input.packageName ?? "")
+//            } else {
+//                assetPath = registrar.lookupKey(forAsset: input.uri ?? "")
+//            }
+//            mediaUrl = assetPath
+//            isAssetUrl = true
+//        }else{
+//            mediaUrl = input.uri ?? ""
+//            isAssetUrl = false
+//        }
+//
+//        player?.setMediaPlayerUrl(
+//            uri: mediaUrl,
+//            isAssetUrl: isAssetUrl,
+//            autoPlay: input.autoPlay?.boolValue ?? true,
+//            hwAcc: input.hwAcc?.intValue ?? HWAccellerationType.HW_ACCELERATION_AUTOMATIC.rawValue,
+//            options: input.options as? [String] ?? []
+//        )
         
-        var isAssetUrl: Bool = false
-        var mediaUrl: String = ""
-        
-        if(DataSourceType(rawValue: Int(truncating: input.type!)) == DataSourceType.ASSET){
-            var assetPath: String
-            if input.packageName != nil {
-                assetPath = registrar.lookupKey(forAsset: input.uri ?? "" , fromPackage: input.packageName ?? "")
-            } else {
-                assetPath = registrar.lookupKey(forAsset: input.uri ?? "")
-            }
-            mediaUrl = assetPath
-            isAssetUrl = true
-        }else{
-            mediaUrl = input.uri ?? ""
-            isAssetUrl = false
-        }
-        
-        player?.setMediaPlayerUrl(
-            uri: mediaUrl,
-            isAssetUrl: isAssetUrl,
-            autoPlay: input.autoPlay?.boolValue ?? true,
-            hwAcc: input.hwAcc?.intValue ?? HWAccellerationType.HW_ACCELERATION_AUTOMATIC.rawValue,
-            options: input.options as? [String] ?? []
-        )
+        let message: TextureMessage = TextureMessage()
+        message.textureId = 0
+        return message
     }
     
     public func dispose(_ input: TextureMessage, error: AutoreleasingUnsafeMutablePointer<FlutterError?>) {
