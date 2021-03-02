@@ -105,16 +105,13 @@ class VlcPlayerController extends ValueNotifier<VlcPlayerValue> {
   DataSourceType get dataSourceType => _dataSourceType;
   DataSourceType _dataSourceType;
 
-  /// Determine if platform is ready to call initialize method
-  bool get isReadyToInitialize => _isReadyToInitialize;
-  bool _isReadyToInitialize;
-
   /// The id of a texture that hasn't been initialized.
   @visibleForTesting
   static const int kUninitializedTextureId = -1;
+
   /// The viewId for this controller
   int _textureId = kUninitializedTextureId;
-  
+
   /// This is just exposed for testing. It shouldn't be used by anyone depending
   /// on the plugin.
   @visibleForTesting
@@ -195,6 +192,7 @@ class VlcPlayerController extends ValueNotifier<VlcPlayerValue> {
           value = value.copyWith(
             isEnded: false,
             isPlaying: true,
+            isBuffering: false,
             playingState: PlayingState.playing,
             duration: event.duration,
             size: event.size,
@@ -287,7 +285,9 @@ class VlcPlayerController extends ValueNotifier<VlcPlayerValue> {
       }
     }
 
-    _rendererEventSubscription = vlcPlayerPlatform.rendererEventsFor(_textureId).listen(rendererEventListener);
+    _rendererEventSubscription = vlcPlayerPlatform
+        .rendererEventsFor(_textureId)
+        .listen(rendererEventListener);
 
     if (!initializingCompleter.isCompleted) {
       initializingCompleter.complete(null);
@@ -646,7 +646,8 @@ class VlcPlayerController extends ValueNotifier<VlcPlayerValue> {
   /// Returns the number of audio tracks
   Future<int> getAudioTracksCount() async {
     _throwIfNotInitialized('getAudioTracksCount');
-    var audioTracksCount = await vlcPlayerPlatform.getAudioTracksCount(_textureId);
+    var audioTracksCount =
+        await vlcPlayerPlatform.getAudioTracksCount(_textureId);
     value = value.copyWith(audioTracksCount: audioTracksCount);
     return audioTracksCount;
   }
@@ -738,7 +739,8 @@ class VlcPlayerController extends ValueNotifier<VlcPlayerValue> {
   /// Returns the number of video tracks
   Future<int> getVideoTracksCount() async {
     _throwIfNotInitialized('getVideoTracksCount');
-    var videoTracksCount = await vlcPlayerPlatform.getVideoTracksCount(_textureId);
+    var videoTracksCount =
+        await vlcPlayerPlatform.getVideoTracksCount(_textureId);
     value = value.copyWith(videoTracksCount: videoTracksCount);
     return videoTracksCount;
   }
@@ -847,5 +849,4 @@ class VlcPlayerController extends ValueNotifier<VlcPlayerValue> {
       );
     }
   }
-  
 }
