@@ -3,9 +3,23 @@ import Flutter
 import MobileVLCKit
 import UIKit
 
+extension VLCViewController : FlutterTexture{
+    
+    public func copyPixelBuffer() -> Unmanaged<CVPixelBuffer>? {
+        func copyPixelBuffer() -> Unmanaged<CVPixelBuffer>? {
+            let val = pixelBuffer.getAndSet(newValue: nil)
+            return val != nil ? Unmanaged<CVPixelBuffer>.passRetained(val!) : nil
+        }
+    }
+    
+}
+
 
 public class VLCViewController: NSObject {
     
+    let pixelBuffer = AtomicReference<CVPixelBuffer?>(initialValue: nil)
+
+    let registrar: FlutterPluginRegistrar
     var hostedView: UIView
     var vlcMediaPlayer: VLCMediaPlayer
     var mediaEventChannel: FlutterEventChannel
@@ -18,15 +32,17 @@ public class VLCViewController: NSObject {
         return hostedView
     }
     
-    init(frame: CGRect, viewId: Int64, messenger:FlutterBinaryMessenger) {
+    init(registrar:FlutterPluginRegistrar) {
+        
+        self.registrar = registrar
         
         let mediaEventChannel = FlutterEventChannel(
             name: "flutter_video_plugin/getVideoEvents_\(viewId)",
-            binaryMessenger: messenger
+            binaryMessenger: registrar.messenger()
         )
         let rendererEventChannel = FlutterEventChannel(
             name: "flutter_video_plugin/getRendererEvents_\(viewId)",
-            binaryMessenger: messenger
+            binaryMessenger: registrar.messenger()
         )
         
         self.hostedView = UIView(frame: frame)
@@ -582,7 +598,6 @@ enum HWAccellerationType: Int
     case HW_ACCELERATION_DECODING = 2
     case HW_ACCELERATION_FULL = 3
 }
-
 
 extension VLCMediaPlayer {
     

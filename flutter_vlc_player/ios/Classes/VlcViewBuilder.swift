@@ -31,11 +31,8 @@ public class VLCViewBuilder: NSObject, VlcPlayerApi{
     
     public func create(_ input: CreateMessage, error: AutoreleasingUnsafeMutablePointer<FlutterError?>) -> TextureMessage? {
         
-        let texture = VlcViewOutput()
-        let textureId = textureRegistry.register(texture)
-                
-        var player: VLCViewController?
-        player = VLCViewController(frame: frame, viewId: viewId, messenger: messenger)
+        let player = VLCViewController(registrar: registrar)
+        let textureId = textureRegistry.register(player)
         players[Int(textureId)] = player
         
 
@@ -56,7 +53,7 @@ public class VLCViewBuilder: NSObject, VlcPlayerApi{
             isAssetUrl = false
         }
 
-        player?.setMediaPlayerUrl(
+        player.setMediaPlayerUrl(
             uri: mediaUrl,
             isAssetUrl: isAssetUrl,
             autoPlay: input.autoPlay?.boolValue ?? true,
