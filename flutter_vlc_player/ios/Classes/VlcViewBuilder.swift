@@ -5,22 +5,16 @@ public class VLCViewBuilder: NSObject, VlcPlayerApi{
     
     var players = [Int:VLCViewController]()
     private var registrar: FlutterPluginRegistrar
+    private var textureRegistry: FlutterTextureRegistry
     private var messenger: FlutterBinaryMessenger
     
     init(registrar: FlutterPluginRegistrar) {
         self.registrar = registrar
         self.messenger = registrar.messenger()
+        self.textureRegistry = registrar.textures()
         super.init()
         //
         VlcPlayerApiSetup(messenger, self)
-    }
-    
-    public func build(frame: CGRect, viewId: Int64) -> VLCViewController{
-        //
-        var vlcViewController: VLCViewController
-        vlcViewController = VLCViewController(frame: frame, viewId: viewId, messenger: messenger)
-        players[Int(viewId)] = vlcViewController
-        return vlcViewController;
     }
     
     public func initialize(_ error: AutoreleasingUnsafeMutablePointer<FlutterError?>) {
@@ -37,35 +31,41 @@ public class VLCViewBuilder: NSObject, VlcPlayerApi{
     
     public func create(_ input: CreateMessage, error: AutoreleasingUnsafeMutablePointer<FlutterError?>) -> TextureMessage? {
         
-//        let player = getPlayer(textureId: input.textureId)
-//        
-//        var isAssetUrl: Bool = false
-//        var mediaUrl: String = ""
-//
-//        if(DataSourceType(rawValue: Int(truncating: input.type!)) == DataSourceType.ASSET){
-//            var assetPath: String
-//            if input.packageName != nil {
-//                assetPath = registrar.lookupKey(forAsset: input.uri ?? "" , fromPackage: input.packageName ?? "")
-//            } else {
-//                assetPath = registrar.lookupKey(forAsset: input.uri ?? "")
-//            }
-//            mediaUrl = assetPath
-//            isAssetUrl = true
-//        }else{
-//            mediaUrl = input.uri ?? ""
-//            isAssetUrl = false
-//        }
-//
-//        player?.setMediaPlayerUrl(
-//            uri: mediaUrl,
-//            isAssetUrl: isAssetUrl,
-//            autoPlay: input.autoPlay?.boolValue ?? true,
-//            hwAcc: input.hwAcc?.intValue ?? HWAccellerationType.HW_ACCELERATION_AUTOMATIC.rawValue,
-//            options: input.options as? [String] ?? []
-//        )
+        let texture = VlcViewOutput()
+        let textureId = textureRegistry.register(texture)
+                
+        var player: VLCViewController?
+        player = VLCViewController(frame: frame, viewId: viewId, messenger: messenger)
+        players[Int(textureId)] = player
+        
+
+        var isAssetUrl: Bool = false
+        var mediaUrl: String = ""
+
+        if(DataSourceType(rawValue: Int(truncating: input.type!)) == DataSourceType.ASSET){
+            var assetPath: String
+            if input.packageName != nil {
+                assetPath = registrar.lookupKey(forAsset: input.uri ?? "" , fromPackage: input.packageName ?? "")
+            } else {
+                assetPath = registrar.lookupKey(forAsset: input.uri ?? "")
+            }
+            mediaUrl = assetPath
+            isAssetUrl = true
+        }else{
+            mediaUrl = input.uri ?? ""
+            isAssetUrl = false
+        }
+
+        player?.setMediaPlayerUrl(
+            uri: mediaUrl,
+            isAssetUrl: isAssetUrl,
+            autoPlay: input.autoPlay?.boolValue ?? true,
+            hwAcc: input.hwAcc?.intValue ?? HWAccellerationType.HW_ACCELERATION_AUTOMATIC.rawValue,
+            options: input.options as? [String] ?? []
+        )
         
         let message: TextureMessage = TextureMessage()
-        message.textureId = 0
+        message.textureId = NSNumber(value: textureId)
         return message
     }
     

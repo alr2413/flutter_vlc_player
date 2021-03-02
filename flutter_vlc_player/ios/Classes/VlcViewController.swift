@@ -4,7 +4,7 @@ import MobileVLCKit
 import UIKit
 
 
-public class VLCViewController: NSObject, FlutterPlatformView {
+public class VLCViewController: NSObject {
     
     var hostedView: UIView
     var vlcMediaPlayer: VLCMediaPlayer
